@@ -3,10 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Google Custom Search</title>
-  <script src="https://cse.google.com/cse.js?cx=277fedcced2054b05"></script>
+  <title>Search Results</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+    #results {
+      width: 100%;
+      max-width: 800px;
+    }
+    .result {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .result img {
+      max-width: 100px;
+      margin-right: 10px;
+    }
+    .result-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+    }
+    .result-link {
+      color: #1a0dab;
+      text-decoration: none;
+    }
+    .result-snippet {
+      margin: 5px 0;
+    }
+  </style>
 </head>
 <body>
-  <div class="gcse-search"></div>
+
+  <h1>Search with API</h1>
+  <input type="text" id="query" placeholder="Enter search term" />
+  <button onclick="search()">Search</button>
+
+  <div id="results"></div>
+
+  <script>
+    async function search() {
+      const query = document.getElementById("query").value;
+      if (!query) {
+        alert("Please enter a search term.");
+        return;
+      }
+
+      const apiUrl = `https://courseenrollment.azurewebsites.net/api/searchapi?code=ucFUneun4bBa6jRrrIXeD4C87Xr42Jr0YccozmpxWvNCAzFuzqo62Q%3D%3D&q=${encodeURIComponent(query)}`;
+      
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        displayResults(data.items);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        alert("Error fetching data. Please try again later.");
+      }
+    }
+
+    function displayResults(items) {
+      const resultsContainer = document.getElementById("results");
+      resultsContainer.innerHTML = ""; // Clear previous results
+
+      if (!items || items.length === 0) {
+        resultsContainer.innerHTML = "<p>No results found.</p>";
+        return;
+      }
+
+      items.forEach(item => {
+        const resultElement = document.createElement("div");
+        resultElement.classList.add("result");
+
+        // Title and Link
+        const titleElement = document.createElement("h2");
+        titleElement.classList.add("result-title");
+        titleElement.innerHTML = `<a href="${item.link}" target="_blank" class="result-link">${item.title}</a>`;
+
+        // Image (if available)
+        const imageElement = document.createElement("img");
+        if (item.pagemap && item.pagemap.cse_image) {
+          imageElement.src = item.pagemap.cse_image[0].src;
+        } else {
+          imageElement.src = "https://via.placeholder.com/100"; // Placeholder if no image
+        }
+
+        // Snippet
+        const snippetElement = document.createElement("p");
+        snippetElement.classList.add("result-snippet");
+        snippetElement.textContent = item.snippet;
+
+        resultElement.appendChild(imageElement);
+        resultElement.appendChild(titleElement);
+        resultElement.appendChild(snippetElement);
+
+        resultsContainer.appendChild(resultElement);
+      });
+    }
+  </script>
+
 </body>
 </html>
